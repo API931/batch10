@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="processbookmovieRequest" format="json">
+      <types:shape format="weave" example="examples/processbookMovieRequest.json"><![CDATA[%dw 2.0
+
+type processbookmovieRequest = {|
+  name: String, 
+  emailId: String, 
+  movie: String, 
+  theater: String, 
+  city: String, 
+  noOfSeats: Number {"typeId": "int"}, 
+  screen: String, 
+  movieTime: String
+|} {"example": "{\\\"name\\\":\\\"John\\\",\\\"emailId\\\":\\\"John@gmail.com\\\",\\\"movie\\\":\\\"Spiderman\\\",\\\"theater\\\":\\\"PVR\\\",\\\"city\\\":\\\"Delhi\\\",\\\"noOfSeats\\\":8,\\\"screen\\\":\\\"S1\\\",\\\"movieTime\\\":\\\"1pm\\\"}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="processbookmovieResponse" format="json">
+      <types:shape format="weave" example="examples/processbookMovieResponse.json"><![CDATA[%dw 2.0
+
+type processbookmovieResponse = {|
+  name: String, 
+  emailId: String, 
+  movie: String, 
+  theater: String, 
+  city: String, 
+  noOfSeats: Number {"typeId": "int"}, 
+  screen: String, 
+  movieTime: String, 
+  ticketBookingId: String, 
+  actualAmount: Number {"typeId": "double"}, 
+  discountApplied: Number {"typeId": "int"}, 
+  paidAmount: Number {"typeId": "int"}, 
+  status: String
+|} {"example": "{\\\"name\\\":\\\"John\\\",\\\"emailId\\\":\\\"John@gmail.com\\\",\\\"movie\\\":\\\"Spiderman\\\",\\\"theater\\\":\\\"PVR\\\",\\\"city\\\":\\\"Delhi\\\",\\\"noOfSeats\\\":8,\\\"screen\\\":\\\"S1\\\",\\\"movieTime\\\":\\\"1pm\\\",\\\"ticketBookingId\\\":\\\"2943097430972\\\",\\\"actualAmount\\\":500.5,\\\"discountApplied\\\":200,\\\"paidAmount\\\":300,\\\"status\\\":\\\"Completed\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#eb74a6ff-46b0-4142-a343-125133972bb6">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="processbookmovieRequest"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#d85acf49-5f28-40fb-961f-a2cef3379ed7">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="processbookmovieResponse"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

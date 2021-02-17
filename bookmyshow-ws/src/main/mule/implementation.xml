@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:order-management-api="http://www.mulesoft.org/schema/mule/order-management-api"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:movie-management-api="http://www.mulesoft.org/schema/mule/movie-management-api" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/movie-management-api http://www.mulesoft.org/schema/mule/movie-management-api/current/mule-movie-management-api.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/order-management-api http://www.mulesoft.org/schema/mule/order-management-api/current/mule-order-management-api.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<!-- <movie-management-api:config name="Movie_Management_api_Config" doc:name="Movie_Management_api Config" doc:id="8e167d4f-b721-4a67-b3aa-39bd9e4466e7" property_host="managemovie-api.us-e2.cloudhub.io" property_port="80" property_protocol="HTTP" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="b1b1ab33-6b7a-4053-8117-046b0a66724e" file="config.yaml" key="mykey" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>-->
+	<flow name="getMovies" doc:id="92fdc7b1-02f8-4027-94a3-1cce8e31330a">
+		<flow-ref doc:name="setCityLanguageVariables" doc:id="c30fc3c1-3117-48e7-b0c5-8acd2be11c89" name="setCityLanguageVariables" />
+		<flow-ref doc:name="CityLanguageValidationFlow" doc:id="3cd965fa-bb51-4adb-b817-15b1478ec640" name="CityLanguageValidationFlow" />
+		<choice doc:name="Choice" doc:id="fafa7c54-aad8-4ca2-b326-e8df389e041a">
+			<when expression="#[(vars.city != null) and (vars.language == null)]">
+				<movie-management-api:get-movies-by-particular-city doc:name="Get Movies by particular City" doc:id="8bca5a5c-c458-4a33-a9bd-a8b7517acc6d" config-ref="Movie_Management_api_Config" client-id="${secure::movieManagement.client_id}" client-secret="${secure::movieManagement.client_secret}" city="#[vars.city]" >
+					<error-mapping sourceType="MOVIE-MANAGEMENT-API:CONNECTIVITY" targetType="APP:SYSTEM_API_CONNECTIVITY" />
+					 <error-mapping sourceType="MOVIE-MANAGEMENT-API:TOO_MANY_REQUESTS" targetType="APP:SYSTEM_SLAPOLICY_FAILURE" />
+				</movie-management-api:get-movies-by-particular-city>
+			</when>
+			<when expression="#[(vars.city == null) and (vars.language != null)]">
+				<movie-management-api:get-movies-by-particular-language doc:name="Get Movies by particular Language" doc:id="7cfda962-9eab-4e77-83de-81bba8d9362d" config-ref="Movie_Management_api_Config" client-id="${secure::movieManagement.client_id}" client-secret="${secure::movieManagement.client_secret}" language="#[vars.language]" >
+					<error-mapping sourceType="MOVIE-MANAGEMENT-API:CONNECTIVITY" targetType="APP:SYSTEM_API_CONNECTIVITY" />
+					<error-mapping sourceType="MOVIE-MANAGEMENT-API:TOO_MANY_REQUESTS" targetType="APP:SYSTEM_SLAPOLICY_FAILURE" />
+				</movie-management-api:get-movies-by-particular-language>
+			</when>
+			<when expression="#[(vars.city != null) and (vars.language != null)]">
+				<movie-management-api:get-movies-by-particular-city-and-language doc:name="Get Movies by particular City And Language" doc:id="20fae9f3-7862-4ab5-a5cc-7c20d4471816" config-ref="Movie_Management_api_Config" client-id="${secure::movieManagement.client_id}" client-secret="${secure::movieManagement.client_secret}" language="#[vars.language]" city="#[vars.city]" >
+					<error-mapping sourceType="MOVIE-MANAGEMENT-API:CONNECTIVITY" targetType="APP:SYSTEM_API_CONNECTIVITY" />
+					<error-mapping sourceType="MOVIE-MANAGEMENT-API:TOO_MANY_REQUESTS" targetType="APP:SYSTEM_SLAPOLICY_FAILURE" />
+				</movie-management-api:get-movies-by-particular-city-and-language>
+			</when>
+			<otherwise>
+				<movie-management-api:get-all-movies doc:name="Get all Movies" doc:id="3bbc6555-d7ed-42cc-8441-523aeeddd6a2" config-ref="Movie_Management_api_Config" client-id="${secure::movieManagement.client_id}" client-secret="${secure::movieManagement.client_secret}" >
+					<error-mapping sourceType="MOVIE-MANAGEMENT-API:TOO_MANY_REQUESTS" targetType="APP:SYSTEM_SLAPOLICY_FAILURE" />
+					<error-mapping sourceType="MOVIE-MANAGEMENT-API:CONNECTIVITY" targetType="APP:SYSTEM_API_CONNECTIVITY" />
+				</movie-management-api:get-all-movies>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="c53e2d93-edea-4ef3-b0fb-ccad28b32c40">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="157353d1-f777-4e55-8e6d-f3e22b9f91db" />
+	</flow>
+	<sub-flow name="setCityLanguageVariables" doc:id="00d6deac-861f-4605-bce2-c30a9378fb26" >
+		<set-variable value="#[message.attributes.queryParams.city]" doc:name="Set City Variable" doc:id="3cedb3a7-4a89-48c5-b291-1b9054bbabeb" variableName="city" />
+		<set-variable value="#[message.attributes.queryParams.language]" doc:name="Set Language Variable" doc:id="03989913-3b54-411f-9ca9-bf2e9c6727c2" variableName="language" />
+	</sub-flow>
+	<flow name="CityLanguageValidationFlow" doc:id="6bb980ad-766a-4f4d-819d-e6e2426ffecd" >
+		<choice doc:name="Choice" doc:id="a1c0da2f-b38e-4635-a03e-fdbd1b9b048e" >
+			<when expression="#[vars.city != null]">
+				<validation:is-true doc:name="Is City Valid" doc:id="4b311d9c-0a58-4735-9b8b-6f58d73707a8" expression="#[['Pune','Mumbai','Bengaluru', 'Latur'] contains vars.city]" message='Input city is not valid.'>
+					<error-mapping targetType="APP:INPUT_VALIDATION" />
+				</validation:is-true>
+			</when>
+		</choice>
+		<choice doc:name="Choice" doc:id="d7f9d059-4c0c-4ac3-bfe9-130604d87b3b" >
+			<when expression="#[vars.language != null]">
+				<validation:is-true doc:name="Is Language Valid" doc:id="fc7e309d-42b2-42de-a7b9-3c95802f15df" expression="#[['English','Hindi','Tamil'] contains vars.language]" message="Input language is not valid.">
+					<error-mapping targetType="APP:INPUT_VALIDATION" />
+				</validation:is-true>
+			</when>
+		</choice>
+	</flow>
+	<flow name="bookMovie" doc:id="ef8ae17f-e4aa-4304-80c1-2c10299c2d56" >
+		<choice doc:name="Choice" doc:id="36d0ff04-1b77-42d0-9c75-bf862c8a93c4" >
+			<when expression='#[(payload.name !="") and (payload.emailId  !="") and  (payload.movie  !="") and  (payload.theater  !="") and  (payload.city  !="") and (payload.noOfSeats  !="") and (payload.screen  !="") and (payload.movieTime  !="")]'>
+				<flow-ref doc:name="Flow Reference" doc:id="bf22df76-932d-40fa-b7f8-8428ece97073" name="ValidateSuccessBookMovie"/>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="9da51998-0c5e-4105-a76f-0fd750fef02c" type="APP:INPUT_VALIDATION" description="One of the input fields is empty."/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="ValidateSuccessBookMovie" doc:id="de56f8d4-3ec5-49ec-95d6-0acda2ca5ef8">
+		<set-variable value="#[message.payload.noOfSeats default 1]" doc:name="noOFSeats" doc:id="4bf744bb-fb95-4f0c-bf25-33201b30a36d" variableName="noOFSeats" />
+		<movie-management-api:get-ticket-price-for-particular-movie doc:name="Get ticket-price for particular Movie" doc:id="93e3abe8-4e27-443e-b2e0-98e0812c2f36" config-ref="Movie_Management_api_Config" movie-id="#[payload.movie]" theatre-name="#[payload.theater]" client-id="${secure::orderManagement.client_id}" client-secret="${secure::orderManagement.client_secret}" target="pricepayloadvar">
+			<error-mapping sourceType="MOVIE-MANAGEMENT-API:CONNECTIVITY" targetType="APP:SYSTEM_API_CONNECTIVITY" />
+			<error-mapping sourceType="MOVIE-MANAGEMENT-API:TOO_MANY_REQUESTS" targetType="APP:SYSTEM_SLAPOLICY_FAILURE" />
+		</movie-management-api:get-ticket-price-for-particular-movie>
+		<validation:is-not-null doc:name="Is not null" doc:id="32f7ebe7-9f39-4c4b-84f8-d115dda495c5" value="#[vars.pricepayloadvar.movieId]" message="The provided movie/theater does not exist in the database.">
+			<error-mapping targetType="APP:INPUT_VALIDATION" />
+		</validation:is-not-null>
+		<set-variable value="#[output text/plain --- (vars.pricepayloadvar[0].theaterPrice as Number) * (vars.noOFSeats as Number)]" doc:name="actualPrice" doc:id="bc40e2bb-a7f0-492c-986d-4488b0e72434" variableName="actualPrice" mimeType="application/json"/>
+		<choice doc:name="Choice" doc:id="69471025-f737-4777-b6d2-4cbe907227eb">
+			<when expression="#[vars.noOFSeats &gt;4]">
+				<set-variable value="#[(10/100)*vars.actualPrice]" doc:name="discountedPrice" doc:id="295aa9a2-d921-4f86-a6db-5eacdeb481d0" variableName="discountedPrice" />
+			</when>
+			<otherwise>
+				<set-variable value="0" doc:name="discountedPrice" doc:id="a7a87b98-2fe2-46a1-8936-a596da16849f" variableName="discountedPrice" />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="eb74a6ff-46b0-4142-a343-125133972bb6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	noOfSeats: payload.noOfSeats,
+	movie: payload.movie,
+	city: payload.city,
+	movieTime: payload.movieTime,
+	theater: payload.theater,
+	name: payload.name,
+	screen: payload.screen,
+	emailId: payload.emailId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<order-management-api:create-book-movie doc:name="Create book movie" doc:id="f9aab2d3-d08b-485e-ab45-199a83f684c9" config-ref="Order_Management_API_Config" client-id="${secure::orderManagement.client_id}" client-secret="${secure::orderManagement.client_secret}">
+			<error-mapping sourceType="ORDER-MANAGEMENT-API:CONNECTIVITY" targetType="APP:SYSTEM_API_CONNECTIVITY" />
+			<error-mapping sourceType="ORDER-MANAGEMENT-API:TOO_MANY_REQUESTS" targetType="APP:SYSTEM_SLAPOLICY_FAILURE" />
+		</order-management-api:create-book-movie>
+		<ee:transform doc:name="Transform Message" doc:id="d85acf49-5f28-40fb-961f-a2cef3379ed7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	name: payload.name,
+	emailId: payload.emailId,
+	movie: payload.movie,
+	theater: payload.theater,
+	city: payload.city,
+	noOfSeats: payload.noOfSeats,
+	screen: payload.screen,
+	movieTime: payload.movieTime,
+	ticketBookingId: payload.ticketBookingId default "",
+	actualAmount: vars.actualPrice,
+	discountApplied: vars.discountedPrice,
+	paidAmount: vars.actualPrice - vars.discountedPrice,
+	status: "COMPLETED"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e4b05eeb-dde7-42d6-ab51-8209ba7cfb05" />
+	</flow>
+</mule>

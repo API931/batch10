@@ -1,0 +1,10 @@
+{
+  "name": "John",
+  "emailId": "John@gmail.com",
+  "movie": "Spiderman",
+  "theater": "PVR",
+  "city": "Delhi",
+  "noOfSeats": 8,
+  "screen": "S1",
+  "movieTime": "1pm"
+  }

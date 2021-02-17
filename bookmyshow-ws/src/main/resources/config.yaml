@@ -1,0 +1,15 @@
+movieManagement:
+  host: "managemovie-api.us-e2.cloudhub.io"
+  port: "80"
+  basepath: "/"
+  protocol: "HTTP"
+  client_id: "![/erUOIR4Jz62mmAlo5lBDiGh+VbcSw6jeoJqmDs/n9rpwXMiSBrzbQ==]"
+  client_secret: "![9VM+V2BbCyXoAc6EYfMchkwILCpPTLvITG/6WjfLhmluQBiEl+F7cg==]"
+  
+orderManagement:
+  host: "ordermovie-ws.us-e2.cloudhub.io"
+  port: "80"
+  basepath: "/api/"
+  protocol: "HTTP"
+  client_id: "![/erUOIR4Jz62mmAlo5lBDiGh+VbcSw6jeoJqmDs/n9rpwXMiSBrzbQ==]"
+  client_secret: "![9VM+V2BbCyXoAc6EYfMchkwILCpPTLvITG/6WjfLhmluQBiEl+F7cg==]"

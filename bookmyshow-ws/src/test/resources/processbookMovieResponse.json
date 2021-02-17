@@ -1,0 +1,15 @@
+  {
+  "name": "John",
+  "emailId": "John@gmail.com",
+  "movie": "Spiderman",
+  "theater": "PVR",
+  "city": "Delhi",
+  "noOfSeats": 8,
+  "screen": "S1",
+  "movieTime": "1pm",
+  "ticketBookingId": "2943097430972",
+  "actualAmount": 500.5,
+  "discountApplied": 200,
+  "paidAmount": 300,
+  "status": "Completed"
+}
